@@ -121,18 +121,18 @@ const ContentScene = ({ imageSrc }: { imageSrc: string }) => {
     const texture = useTexture(imageSrc) as THREE.Texture;
     const img = texture.image as HTMLImageElement;
 
-    // Fit image inside viewport while preserving aspect ratio (CONTAIN)
+    // Fit image within viewport preserving aspect ratio (CONTAIN)
     const imageAspect = img ? img.width / img.height : 1;
     const viewportAspect = viewport.width / viewport.height;
 
     let w: number, h: number;
     if (imageAspect > viewportAspect) {
-        // Image wider than viewport: fit to width
-        w = viewport.width * 0.75; // 75% of viewport width to leave breathing room
+        // Image wider than viewport: match width
+        w = viewport.width;
         h = w / imageAspect;
     } else {
-        // Image taller than viewport: fit to height
-        h = viewport.height * 0.85; // 85% of viewport height
+        // Image taller than viewport: match height
+        h = viewport.height;
         w = h * imageAspect;
     }
 

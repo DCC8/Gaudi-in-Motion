@@ -31,7 +31,7 @@ export default function HeroSection({ isActive }: HeroSectionProps) {
             {/* Full Screen Shader Canvas (includes Text) */}
             <div className="absolute inset-0 z-10 w-full h-full">
                 <HeroShader
-                    imageSrc="/images/Untitled_Image_8_2026-02-13_13-37.png"
+                    imageSrc="/images/hero_bg.jpg"
                     config={shaderConfig}
                     isActive={isActive}
                 />
