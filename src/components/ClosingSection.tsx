@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
+import { useTouchNav } from "@/hooks/useMobile";
 
 interface ClosingSectionProps {
     isActive: boolean;
@@ -119,8 +120,38 @@ export default function ClosingSection({ isActive, onComplete, onReverse }: Clos
         }
     }, [goToStep]);
 
+    // Touch navigation
+    const handleTouchNext = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 500);
+        if (stepRef.current < SLIDES.length - 1) {
+            goToStep(stepRef.current + 1, 1);
+        } else {
+            onCompleteRef.current?.();
+        }
+    }, [goToStep]);
+
+    const handleTouchPrev = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 500);
+        if (stepRef.current > 0) {
+            goToStep(stepRef.current - 1, -1);
+        } else {
+            onReverseRef.current?.();
+        }
+    }, [goToStep]);
+
+    const touchRef = useTouchNav(handleTouchNext, handleTouchPrev);
+
+    const sectionRefCallback = useCallback((el: HTMLElement | null) => {
+        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    }, [touchRef]);
+
     return (
         <section
+            ref={sectionRefCallback}
             onWheel={handleWheel}
             className="w-full h-full relative bg-black overflow-hidden no-swipe"
         >

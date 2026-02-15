@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import gsap from "gsap";
 import GooeyImage from "./GooeyImage";
+import { useTouchNav, useIsMobile } from "@/hooks/useMobile";
 
 interface ThreeWorksSectionProps {
     isActive: boolean;
@@ -62,6 +63,7 @@ const HoverTypewriter = ({ text, isHovered }: { text: string; isHovered: boolean
 export default function ThreeWorksSection({ isActive, onNext, onReverse }: ThreeWorksSectionProps) {
     const sectionRef = useRef<HTMLDivElement>(null);
     const [hoveredCard, setHoveredCard] = React.useState<number | null>(null);
+    const isMobile = useIsMobile();
 
     const handleWheel = (e: React.WheelEvent) => {
         if (!isActive) return;
@@ -72,25 +74,41 @@ export default function ThreeWorksSection({ isActive, onNext, onReverse }: Three
         }
     };
 
+    // Touch navigation
+    const handleTouchNext = useCallback(() => {
+        onNext?.();
+    }, [onNext]);
+
+    const handleTouchPrev = useCallback(() => {
+        onReverse?.();
+    }, [onReverse]);
+
+    const touchRef = useTouchNav(handleTouchNext, handleTouchPrev);
+
+    const combinedRef = useCallback((el: HTMLDivElement | null) => {
+        (sectionRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    }, [touchRef]);
+
     return (
         <section
-            ref={sectionRef}
+            ref={combinedRef}
             onWheel={handleWheel}
-            className="w-full h-full bg-black text-white flex flex-col items-center justify-center p-8 md:p-16 relative overflow-hidden"
+            className={`w-full h-full bg-black text-white flex flex-col items-center justify-center p-4 md:p-8 lg:p-16 relative overflow-hidden ${isMobile ? 'overflow-y-auto' : ''}`}
         >
             {/* Intro Text */}
-            <div className="max-w-4xl text-center mb-12 relative z-10">
-                <p className="text-xl md:text-2xl font-light leading-relaxed text-gray-200">
+            <div className="max-w-4xl text-center mb-6 md:mb-12 relative z-10">
+                <p className="text-base md:text-xl lg:text-2xl font-light leading-relaxed text-gray-200">
                     La obra se articula como una colección de 3 piezas generativas que exploran tres dimensiones fundamentales del universo gaudiniano. (expandible a otros conceptos)
                 </p>
             </div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl relative z-10 h-[65vh]">
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl relative z-10 ${isMobile ? 'h-auto' : 'h-[65vh]'}`}>
                 {CARDS.map((card) => (
                     <div
                         key={card.id}
-                        className="relative flex flex-col h-full bg-[#080808] border border-white/10 rounded-2xl overflow-hidden group hover:border-white/30 transition-colors duration-300"
+                        className={`relative flex flex-col bg-[#080808] border border-white/10 rounded-2xl overflow-hidden group hover:border-white/30 transition-colors duration-300 ${isMobile ? 'min-h-[250px]' : 'h-full'}`}
                         onMouseEnter={() => setHoveredCard(card.id)}
                         onMouseLeave={() => setHoveredCard(null)}
                     >
@@ -111,7 +129,7 @@ export default function ThreeWorksSection({ isActive, onNext, onReverse }: Three
                         </div>
 
                         {/* Image Container */}
-                        <div className="flex-grow w-full relative p-4 pb-0">
+                        <div className={`w-full relative p-4 pb-0 ${isMobile ? 'h-[150px]' : 'flex-grow'}`}>
                             <div className="w-full h-full relative rounded-t-lg overflow-hidden border-t border-l border-r border-white/5 bg-black">
                                 <GooeyImage imageSrc={card.image} isActive={isActive} />
 
@@ -124,9 +142,15 @@ export default function ThreeWorksSection({ isActive, onNext, onReverse }: Three
                         {/* HUD Footer */}
                         <div className="px-5 py-4 bg-white/[0.02] border-t border-white/5 relative min-h-[100px] flex flex-col justify-between">
 
-                            {/* Typewriter Description */}
+                            {/* Description — auto-show on mobile, typewriter on desktop */}
                             <div className="mb-2">
-                                <HoverTypewriter text={card.desc} isHovered={hoveredCard === card.id} />
+                                {isMobile ? (
+                                    <span className="font-mono text-xs text-white/90 leading-relaxed block min-h-[40px]">
+                                        {card.desc}
+                                    </span>
+                                ) : (
+                                    <HoverTypewriter text={card.desc} isHovered={hoveredCard === card.id} />
+                                )}
                             </div>
 
                             <div className="flex justify-between items-end">

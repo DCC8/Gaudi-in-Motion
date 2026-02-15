@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 import NoiseBackground from "./NoiseBackground";
 import ScrambleText, { ScrambleTextHandle } from "./ScrambleText";
+import { useTouchNav } from "@/hooks/useMobile";
 
 interface StatementSectionProps {
     isActive: boolean;
@@ -145,8 +146,38 @@ export default function StatementSection({ isActive, onComplete, onReverse }: St
         }
     }, [goToStep]);
 
+    // Touch navigation
+    const handleTouchNext = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 450);
+        if (stepRef.current < SLIDE_COUNT - 1) {
+            goToStep(stepRef.current + 1, 1);
+        } else {
+            onCompleteRef.current?.();
+        }
+    }, [goToStep]);
+
+    const handleTouchPrev = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 450);
+        if (stepRef.current > 0) {
+            goToStep(stepRef.current - 1, -1);
+        } else {
+            onReverseRef.current?.();
+        }
+    }, [goToStep]);
+
+    const touchRef = useTouchNav(handleTouchNext, handleTouchPrev);
+
+    const sectionRefCallback = useCallback((el: HTMLElement | null) => {
+        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    }, [touchRef]);
+
     return (
         <section
+            ref={sectionRefCallback}
             onWheel={handleWheel}
             className="w-full h-full relative bg-black overflow-hidden no-swipe"
         >
@@ -160,9 +191,9 @@ export default function StatementSection({ isActive, onComplete, onReverse }: St
                     className="absolute inset-0 flex flex-col items-center justify-center"
                     style={{ opacity: 1 }}
                 >
-                    <div className="max-w-4xl text-center space-y-2 leading-tight">
-                        <ScrambleText ref={addScrambleRef} text="GAUDI in Motion nace como una pieza artística concebida" className="block text-2xl md:text-3xl font-light text-gray-200" manualTrigger />
-                        <ScrambleText ref={addScrambleRef} text="para ser experimentada, no solo contemplada." className="block text-2xl md:text-3xl font-light text-gray-200" manualTrigger delay={0.2} />
+                    <div className="max-w-4xl text-center space-y-2 leading-tight px-4 md:px-0">
+                        <ScrambleText ref={addScrambleRef} text="GAUDI in Motion nace como una pieza artística concebida" className="block text-xl md:text-3xl font-light text-gray-200" manualTrigger />
+                        <ScrambleText ref={addScrambleRef} text="para ser experimentada, no solo contemplada." className="block text-xl md:text-3xl font-light text-gray-200" manualTrigger delay={0.2} />
                     </div>
                 </div>
 
@@ -172,9 +203,9 @@ export default function StatementSection({ isActive, onComplete, onReverse }: St
                     className="absolute inset-0 flex flex-col items-center justify-center"
                     style={{ opacity: 0 }}
                 >
-                    <div className="max-w-4xl text-center space-y-4 leading-normal">
-                        <ScrambleText ref={addScrambleRef} text="Una obra que no se define por una imagen final," className="block text-2xl md:text-3xl font-light text-gray-200" manualTrigger />
-                        <ScrambleText ref={addScrambleRef} text="sino por su comportamiento." className="block text-2xl md:text-3xl font-light text-gray-200" manualTrigger delay={0.2} />
+                    <div className="max-w-4xl text-center space-y-4 leading-normal px-4 md:px-0">
+                        <ScrambleText ref={addScrambleRef} text="Una obra que no se define por una imagen final," className="block text-xl md:text-3xl font-light text-gray-200" manualTrigger />
+                        <ScrambleText ref={addScrambleRef} text="sino por su comportamiento." className="block text-xl md:text-3xl font-light text-gray-200" manualTrigger delay={0.2} />
                         <div className="h-4" />
                         <ScrambleText ref={addScrambleRef} text="Cada composición visual se genera en el instante," className="block text-xl md:text-2xl font-light text-gray-400" manualTrigger delay={0.5} />
                         <ScrambleText ref={addScrambleRef} text="impulsada por modelos de inteligencia artificial" className="block text-xl md:text-2xl font-light text-gray-400" manualTrigger delay={0.7} />
@@ -188,9 +219,9 @@ export default function StatementSection({ isActive, onComplete, onReverse }: St
                     className="absolute inset-0 flex flex-col items-center justify-center"
                     style={{ opacity: 0 }}
                 >
-                    <div className="max-w-4xl text-center space-y-6 leading-tight">
-                        <ScrambleText ref={addScrambleRef} text="Gaudí no construía formas." className="block text-3xl md:text-5xl font-bold text-white" manualTrigger />
-                        <ScrambleText ref={addScrambleRef} text="Construía sistemas." className="block text-3xl md:text-5xl font-bold text-white" manualTrigger delay={0.2} />
+                    <div className="max-w-4xl text-center space-y-6 leading-tight px-4 md:px-0">
+                        <ScrambleText ref={addScrambleRef} text="Gaudí no construía formas." className="block text-2xl md:text-5xl font-bold text-white" manualTrigger />
+                        <ScrambleText ref={addScrambleRef} text="Construía sistemas." className="block text-2xl md:text-5xl font-bold text-white" manualTrigger delay={0.2} />
                         <div className="h-4" />
                         <ScrambleText ref={addScrambleRef} text="Sistemas inspirados en la naturaleza," className="block text-xl md:text-2xl font-mono text-primary-300" manualTrigger delay={0.8} />
                         <ScrambleText ref={addScrambleRef} text="en el equilibrio entre fuerza y belleza." className="block text-xl md:text-2xl font-mono text-primary-300" manualTrigger delay={1.0} />
@@ -203,18 +234,18 @@ export default function StatementSection({ isActive, onComplete, onReverse }: St
                     className="absolute inset-0 flex flex-col items-center justify-center"
                     style={{ opacity: 0 }}
                 >
-                    <div className="max-w-5xl text-center space-y-8 leading-tight">
+                    <div className="max-w-5xl text-center space-y-8 leading-tight px-4 md:px-0">
                         <div className="space-y-1">
-                            <p className="text-2xl md:text-4xl font-light text-gray-400">Donde antes había piedra,</p>
-                            <ScrambleText ref={addScrambleRef} text="ahora hay DATOS." className="block text-3xl md:text-5xl font-bold text-white glow-text" manualTrigger />
+                            <p className="text-xl md:text-4xl font-light text-gray-400">Donde antes había piedra,</p>
+                            <ScrambleText ref={addScrambleRef} text="ahora hay DATOS." className="block text-2xl md:text-5xl font-bold text-white glow-text" manualTrigger />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-2xl md:text-4xl font-light text-gray-400">Donde antes había gravedad,</p>
-                            <ScrambleText ref={addScrambleRef} text="ahora hay ALGORITMOS." className="block text-3xl md:text-5xl font-bold text-white glow-text" manualTrigger delay={0.2} />
+                            <p className="text-xl md:text-4xl font-light text-gray-400">Donde antes había gravedad,</p>
+                            <ScrambleText ref={addScrambleRef} text="ahora hay ALGORITMOS." className="block text-2xl md:text-5xl font-bold text-white glow-text" manualTrigger delay={0.2} />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-2xl md:text-4xl font-light text-gray-400">Donde antes había materia,</p>
-                            <ScrambleText ref={addScrambleRef} text="ahora hay LUZ y TIEMPO REAL." className="block text-3xl md:text-5xl font-bold text-white glow-text" manualTrigger delay={0.4} />
+                            <p className="text-xl md:text-4xl font-light text-gray-400">Donde antes había materia,</p>
+                            <ScrambleText ref={addScrambleRef} text="ahora hay LUZ y TIEMPO REAL." className="block text-2xl md:text-5xl font-bold text-white glow-text" manualTrigger delay={0.4} />
                         </div>
                     </div>
                 </div>

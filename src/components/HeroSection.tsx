@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useLayoutEffect, useState } from "react";
+import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
 import gsap from "gsap";
 import HeroControls, { ShaderConfig } from "./HeroControls";
 import HeroShader from "./HeroShader";
+import { useIsMobile } from "@/hooks/useMobile";
 
 interface HeroSectionProps {
     isActive: boolean;
@@ -11,6 +12,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ isActive }: HeroSectionProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const isMobile = useIsMobile();
     const [shaderConfig, setShaderConfig] = useState<ShaderConfig>({
         distortionStrength: 2.0,
         speed: 1.5,
@@ -18,6 +20,19 @@ export default function HeroSection({ isActive }: HeroSectionProps) {
         colorRevealRadius: 0.3,
         glowIntensity: 0.77,
     });
+
+    // Lower defaults on mobile for performance
+    useEffect(() => {
+        if (isMobile) {
+            setShaderConfig({
+                distortionStrength: 0.5,
+                speed: 0.5,
+                noiseScale: 3,
+                colorRevealRadius: 0.15,
+                glowIntensity: 0.3,
+            });
+        }
+    }, [isMobile]);
 
     useLayoutEffect(() => {
         if (!containerRef.current) return;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
+import { useTouchNav } from "@/hooks/useMobile";
 
 interface IntroSectionProps {
     isActive?: boolean;
@@ -35,6 +36,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
     const mediaContainerRef = useRef<HTMLDivElement>(null);
     const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
     const dotsRef = useRef<(HTMLDivElement | null)[]>([]);
+    const mobileDotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     // Keep callbacks fresh without re-creating handlers
     const onCompleteRef = useRef(onComplete);
@@ -52,6 +54,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
         const oldSlide = textRefs.current[oldStep];
         const newSlide = textRefs.current[newStep];
         const dots = dotsRef.current;
+        const mobileDots = mobileDotRefs.current;
 
         const tl = gsap.timeline({
             onComplete: () => { animatingRef.current = false; },
@@ -84,7 +87,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
             );
         }
 
-        // Update dots directly
+        // Update desktop dots
         dots.forEach((dot, i) => {
             if (!dot) return;
             const active = i === newStep;
@@ -93,6 +96,18 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                 height: active ? 6 : 4,
                 backgroundColor: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)",
                 scale: active ? 1 : 0.7,
+                duration: 0.3,
+                ease: "power2.out",
+            });
+        });
+
+        // Update mobile dots
+        mobileDots.forEach((dot, i) => {
+            if (!dot) return;
+            const active = i === newStep;
+            gsap.to(dot, {
+                width: active ? 8 : 4,
+                backgroundColor: active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.15)",
                 duration: 0.3,
                 ease: "power2.out",
             });
@@ -127,6 +142,33 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
         stepRef.current = newStep;
     }, []);
 
+    // Touch navigation handler
+    const handleTouchNext = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 450);
+
+        if (stepRef.current < TEXT_BLOCKS.length - 1) {
+            goToStep(stepRef.current + 1, 1);
+        } else {
+            onCompleteRef.current?.();
+        }
+    }, [goToStep]);
+
+    const handleTouchPrev = useCallback(() => {
+        if (cooldownRef.current || animatingRef.current) return;
+        cooldownRef.current = true;
+        setTimeout(() => { cooldownRef.current = false; }, 450);
+
+        if (stepRef.current > 0) {
+            goToStep(stepRef.current - 1, -1);
+        } else {
+            onReverseRef.current?.();
+        }
+    }, [goToStep]);
+
+    const touchRef = useTouchNav(handleTouchNext, handleTouchPrev);
+
     // Reset everything when section becomes active
     useEffect(() => {
         if (!isActive) return;
@@ -151,6 +193,14 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                 height: i === 0 ? 6 : 4,
                 backgroundColor: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.15)",
                 scale: i === 0 ? 1 : 0.7,
+            });
+        });
+
+        mobileDotRefs.current.forEach((dot, i) => {
+            if (!dot) return;
+            gsap.set(dot, {
+                width: i === 0 ? 8 : 4,
+                backgroundColor: i === 0 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.15)",
             });
         });
 
@@ -190,21 +240,27 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
         }
     }, [goToStep]);
 
+    // Merge refs for touch
+    const sectionRefCallback = useCallback((el: HTMLElement | null) => {
+        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    }, [touchRef]);
+
     return (
         <section
+            ref={sectionRefCallback}
             onWheel={handleWheel}
             className="w-full h-full relative bg-black overflow-hidden no-swipe"
         >
             {/* Ambient radial light */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_40%_50%,rgba(18,18,18,1)_0%,rgba(0,0,0,1)_100%)]" />
 
-            <div className="relative w-full h-full flex flex-row items-center z-10">
+            <div className="relative w-full h-full flex flex-col md:flex-row items-center z-10">
 
                 {/* LEFT: Text Column */}
-                <div className="w-1/2 h-full flex items-center justify-center relative px-16 md:px-24">
+                <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center relative px-6 md:px-16 lg:px-24">
 
-                    {/* Progress Dots */}
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-30">
+                    {/* Progress Dots — desktop only */}
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3 z-30">
                         {TEXT_BLOCKS.map((_, i) => (
                             <div
                                 key={i}
@@ -220,7 +276,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                     </div>
 
                     {/* Stacked Text Blocks */}
-                    <div className="relative w-full max-w-lg h-[200px]">
+                    <div className="relative w-full max-w-lg h-[120px] md:h-[200px]">
                         {TEXT_BLOCKS.map((text, i) => (
                             <div
                                 key={i}
@@ -234,7 +290,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                                 <span className="text-white/25 font-mono text-[10px] mb-5 tracking-[0.4em] uppercase">
                                     {String(i + 1).padStart(2, "0")} / {String(TEXT_BLOCKS.length).padStart(2, "0")}
                                 </span>
-                                <p className="text-xl md:text-2xl lg:text-3xl font-light text-gray-200 leading-relaxed">
+                                <p className="text-base md:text-xl lg:text-2xl xl:text-3xl font-light text-gray-200 leading-relaxed">
                                     {text}
                                 </p>
                             </div>
@@ -243,7 +299,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                 </div>
 
                 {/* RIGHT: Media */}
-                <div className="w-1/2 h-full flex items-center justify-center relative px-12">
+                <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center relative px-4 md:px-12">
                     <div
                         ref={mediaContainerRef}
                         className="relative w-full max-w-md aspect-[3/4] rounded-[32px] overflow-hidden border border-white/[0.06] shadow-[0_0_60px_rgba(0,0,0,0.5)]"
@@ -299,6 +355,21 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile bottom dot indicator */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex md:hidden gap-1.5 z-20">
+                {TEXT_BLOCKS.map((_, i) => (
+                    <div
+                        key={i}
+                        ref={(el) => { mobileDotRefs.current[i] = el; }}
+                        className="h-1 rounded-full"
+                        style={{
+                            width: i === 0 ? 8 : 4,
+                            backgroundColor: i === 0 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.15)",
+                        }}
+                    />
+                ))}
             </div>
         </section>
     );

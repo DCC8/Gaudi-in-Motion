@@ -4,6 +4,7 @@ import React, { useRef, useCallback, useState, useMemo, useEffect } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
+import { useIsMobile } from "@/hooks/useMobile";
 
 interface CreditsSectionProps {
     isActive: boolean;
@@ -283,23 +284,20 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
     const [showCursor, setShowCursor] = useState(false);
     const waterTexRef = useRef<WaterTexture | null>(null);
     const logoTex = usePaddedSvgTexture("/logo/Logo-Flowners_texto_white_3k.svg");
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         waterTexRef.current = new WaterTexture(128);
         return () => { waterTexRef.current = null; };
     }, []);
 
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (cursorRef.current) {
-            cursorRef.current.style.transform = `translate(${e.clientX - 40}px, ${e.clientY - 40}px)`;
-        }
-
-        // Feed mouse position to WaterTexture (normalized to logo container)
+    // Feed position to WaterTexture (normalized to logo container)
+    const feedWaterTexture = useCallback((clientX: number, clientY: number) => {
         const el = logoContainerRef.current;
         if (el && waterTexRef.current) {
             const rect = el.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
+            const x = (clientX - rect.left) / rect.width;
+            const y = (clientY - rect.top) / rect.height;
             if (x >= -0.05 && x <= 1.05 && y >= -0.05 && y <= 1.05) {
                 waterTexRef.current.addPoint({
                     x: Math.max(0, Math.min(1, x)),
@@ -308,6 +306,20 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
             }
         }
     }, []);
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        if (cursorRef.current) {
+            cursorRef.current.style.transform = `translate(${e.clientX - 40}px, ${e.clientY - 40}px)`;
+        }
+        feedWaterTexture(e.clientX, e.clientY);
+    }, [feedWaterTexture]);
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        if (touch) {
+            feedWaterTexture(touch.clientX, touch.clientY);
+        }
+    }, [feedWaterTexture]);
 
     const handleWheel = useCallback(
         (e: React.WheelEvent) => {
@@ -321,14 +333,15 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
             ref={sectionRef}
             onWheel={handleWheel}
             onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove}
             onMouseEnter={() => setShowCursor(true)}
             onMouseLeave={() => setShowCursor(false)}
-            className="w-full h-full relative bg-black overflow-hidden no-swipe flex flex-col items-center justify-center cursor-none"
+            className={`w-full h-full relative bg-black overflow-hidden no-swipe flex flex-col items-center justify-center ${isMobile ? '' : 'cursor-none'}`}
         >
-            {/* Custom circle cursor */}
+            {/* Custom circle cursor — desktop only */}
             <div
                 ref={cursorRef}
-                className="pointer-events-none fixed top-0 left-0 z-50 w-20 h-20 rounded-full border border-white/25"
+                className={`pointer-events-none fixed top-0 left-0 z-50 w-20 h-20 rounded-full border border-white/25 ${isMobile ? 'hidden' : ''}`}
                 style={{
                     opacity: showCursor ? 1 : 0,
                     transition: "opacity 0.2s ease",
@@ -346,7 +359,7 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
             {/* Logo — generous container (2.8:1 aspect) for displacement headroom */}
             <div
                 ref={logoContainerRef}
-                className="relative w-[700px] max-w-[90vw]"
+                className="relative w-[90vw] md:w-[700px] md:max-w-[90vw]"
                 style={{ aspectRatio: "2.8 / 1" }}
             >
                 {logoTex && (
@@ -355,7 +368,7 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
                         dpr={[1, 2]}
                         gl={{ antialias: true, alpha: true }}
                         frameloop="demand"
-                        className="cursor-none"
+                        className={isMobile ? '' : 'cursor-none'}
                         style={{ background: "transparent" }}
                     >
                         <React.Suspense fallback={null}>

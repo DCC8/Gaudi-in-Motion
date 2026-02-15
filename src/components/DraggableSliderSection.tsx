@@ -3,6 +3,7 @@
 import React, { useRef, useLayoutEffect, useState, useEffect, useCallback } from "react";
 import gsap from "gsap";
 import { Draggable } from "gsap/all";
+import { useTouchNav, useIsMobile } from "@/hooks/useMobile";
 
 // Register Draggable
 if (typeof window !== "undefined") {
@@ -42,6 +43,7 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
     const sliderRef = useRef<HTMLDivElement>(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
+    const isMobile = useIsMobile();
 
     // Cooldown ref to prevent rapid wheel events from triggering multiple slide changes
     const isWheelCoolingDown = useRef(false);
@@ -138,23 +140,23 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
         });
     }, [activeIndex, getSlideWidth]);
 
-    const handleNextSlide = () => {
+    const handleNextSlide = useCallback(() => {
         if (activeIndex < SLIDES.length - 1) {
             setActiveIndex(prev => prev + 1);
         } else {
             // Reached end, navigate to next section
             onNext && onNext();
         }
-    };
+    }, [activeIndex, onNext]);
 
-    const handlePrevSlide = () => {
+    const handlePrevSlide = useCallback(() => {
         if (activeIndex > 0) {
             setActiveIndex(prev => prev - 1);
         } else {
             // Reached start, navigate to prev section
             onReverse && onReverse();
         }
-    };
+    }, [activeIndex, onReverse]);
 
     const handleWheel = (e: React.WheelEvent) => {
         if (!isActive || isWheelCoolingDown.current) return;
@@ -173,27 +175,39 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
         }
     };
 
+    // Touch nav — uses the activeIndex via handleNextSlide/handlePrevSlide
+    const touchRef = useTouchNav(handleNextSlide, handlePrevSlide);
+    const sectionRefCallback = useCallback((el: HTMLDivElement | null) => {
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    }, [touchRef]);
+
     return (
         <section
-            ref={containerRef}
+            ref={sectionRefCallback}
             onWheel={handleWheel}
             className="w-full h-full relative bg-black overflow-hidden flex no-swipe"
         >
-            {/* LEFT: Info & Controls */}
-            <div className="w-[30%] md:w-[25%] h-full relative z-50 bg-gradient-to-r from-black via-black to-transparent flex flex-col justify-center pl-8 md:pl-16 pr-4 pointer-events-none">
+            {/* LEFT: Info & Controls — desktop: side panel, mobile: bottom overlay */}
+            <div className={`
+                ${isMobile
+                    ? 'absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col justify-end px-6 pb-6 pt-16 pointer-events-none'
+                    : 'w-[30%] md:w-[25%] h-full relative z-50 bg-gradient-to-r from-black via-black to-transparent flex flex-col justify-center pl-8 md:pl-16 pr-4 pointer-events-none'
+                }
+            `}>
                 <div className="pointer-events-auto">
                     {/* Counter */}
-                    <div className="flex items-start text-[6vw] font-bold leading-none font-mono mb-8">
+                    <div className={`flex items-start font-bold leading-none font-mono mb-4 md:mb-8 ${isMobile ? 'text-[10vw]' : 'text-[6vw]'}`}>
                         <span className="text-white">0{activeIndex + 1}</span>
                         <span className="text-white/20 ml-2 text-[2vw]">/ 0{SLIDES.length}</span>
                     </div>
 
                     {/* Content (Dynamic) */}
-                    <div className="mb-12 min-h-[150px]">
-                        <h2 className="text-3xl font-light text-white mb-2 transition-all duration-300">
+                    <div className="mb-6 md:mb-12 min-h-[80px] md:min-h-[150px]">
+                        <h2 className="text-xl md:text-3xl font-light text-white mb-2 transition-all duration-300">
                             {SLIDES[activeIndex].title}
                         </h2>
-                        <p className="text-sm text-gray-400 max-w-[200px] transition-all duration-300">
+                        <p className="text-xs md:text-sm text-gray-400 max-w-[200px] transition-all duration-300">
                             {SLIDES[activeIndex].desc}
                         </p>
                     </div>
@@ -202,13 +216,13 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
                     <div className="flex gap-4">
                         <button
                             onClick={handlePrevSlide}
-                            className={`w-12 h-12 border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors ${activeIndex === 0 ? 'opacity-50' : 'opacity-100'}`}
+                            className={`w-10 h-10 md:w-12 md:h-12 border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors ${activeIndex === 0 ? 'opacity-50' : 'opacity-100'}`}
                         >
                             ←
                         </button>
                         <button
                             onClick={handleNextSlide}
-                            className={`w-12 h-12 border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors ${activeIndex === SLIDES.length - 1 ? 'opacity-50' : 'opacity-100'}`}
+                            className={`w-10 h-10 md:w-12 md:h-12 border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors ${activeIndex === SLIDES.length - 1 ? 'opacity-50' : 'opacity-100'}`}
                         >
                             →
                         </button>
@@ -217,13 +231,13 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
             </div>
 
             {/* RIGHT: Linear Slider */}
-            <div ref={sliderContainerRef} className="w-full h-full absolute top-0 left-0 pl-[25%] flex items-center overflow-hidden cursor-grab active:cursor-grabbing">
+            <div ref={sliderContainerRef} className={`w-full h-full absolute top-0 left-0 ${isMobile ? 'pl-0' : 'pl-[25%]'} flex items-center overflow-hidden cursor-grab active:cursor-grabbing`}>
                 {/* Slider Track */}
                 <div ref={sliderRef} className="flex items-center gap-10 pl-10 h-[60vh]">
                     {SLIDES.map((slide, i) => (
                         <div
                             key={i}
-                            className={`relative flex-shrink-0 w-[60vw] md:w-[40vw] h-full rounded-2xl overflow-hidden transition-all duration-500 group cursor-pointer border border-transparent hover:border-white/20 ${i === activeIndex ? 'opacity-100' : 'opacity-40'}`}
+                            className={`relative flex-shrink-0 w-[85vw] md:w-[40vw] h-full rounded-2xl overflow-hidden transition-all duration-500 group cursor-pointer border border-transparent hover:border-white/20 ${i === activeIndex ? 'opacity-100' : 'opacity-40'}`}
                             onClick={() => setActiveIndex(i)}
                         >
                             <img
@@ -239,15 +253,11 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
                             </div>
                         </div>
                     ))}
-                    {/* Spacer logic if needed for drag bounds? 
-                        Draggable 'bounds' usually needs strict container dimensions. 
-                        We handle movement mainly via index, Drag is for "flinging".
-                    */}
                 </div>
             </div>
 
             {/* Credits / Footer */}
-            <div className="absolute bottom-6 left-8 md:left-16 text-[10px] text-white/30 font-mono tracking-widest pointer-events-none">
+            <div className="absolute bottom-6 left-8 md:left-16 text-[10px] text-white/30 font-mono tracking-widest pointer-events-none hidden md:block">
                 SCROLL TO NAVIGATE _
             </div>
         </section>

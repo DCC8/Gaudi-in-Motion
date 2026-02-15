@@ -389,7 +389,7 @@ export default function Home() {
       {currentIndex > 0 && (
         <button
           onClick={() => !isAnimating && navigateTo(0, -1)}
-          className="no-swipe fixed bottom-8 left-8 z-50 group flex items-center gap-3 cursor-pointer"
+          className="no-swipe fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 group flex items-center gap-3 cursor-pointer"
           aria-label="Volver al inicio"
         >
           <span className="w-px h-8 bg-white/20 group-hover:bg-white/50 group-hover:h-10 transition-all duration-300" />

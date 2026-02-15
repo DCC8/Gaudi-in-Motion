@@ -47,7 +47,7 @@ const cardData = [
 
 export default function FloatingCards({ variant = "standard", constraintsRef }: FloatingCardsProps) {
     return (
-        <div ref={constraintsRef} className="absolute inset-0 z-30 pointer-events-none">
+        <div ref={constraintsRef} className="absolute inset-0 z-30 pointer-events-none hidden md:block">
             {cardData.map((card, index) => (
                 <React.Fragment key={index}>
                     {variant === "standard" ? (
