@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/useMobile";
 
 interface MethodologySectionProps {
     isActive: boolean;
@@ -11,6 +12,7 @@ interface MethodologySectionProps {
 
 export default function MethodologySection({ isActive, onComplete, onReverse }: MethodologySectionProps) {
     const containerRef = React.useRef<HTMLDivElement>(null);
+    const isMobile = useIsMobile();
 
     // Boundary detection for scrolling behavior on mobile/overflow
     const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -35,9 +37,141 @@ export default function MethodologySection({ isActive, onComplete, onReverse }: 
         }
     };
 
+    // Touch boundary detection for mobile
+    const touchStartY = React.useRef(0);
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartY.current = e.touches[0].clientY;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        const container = containerRef.current;
+        if (!container) return;
+        const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+        if (Math.abs(deltaY) < 40) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const isAtTop = scrollTop <= 5;
+        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 5;
+
+        if (isAtTop && deltaY < 0) {
+            onReverse?.();
+        } else if (isAtBottom && deltaY > 0) {
+            onComplete?.();
+        }
+    };
+
+    if (isMobile) {
+        return (
+            <section className="w-full h-full flex items-center justify-center relative bg-black">
+                <div
+                    ref={containerRef}
+                    onWheel={handleWheel}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    className="w-full h-full overflow-y-auto overflow-x-hidden no-swipe p-4 flex flex-col items-center scroll-smooth"
+                >
+                    {/* Header */}
+                    <div className="w-full mb-4 flex-shrink-0">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={isActive ? { opacity: 1, y: 0 } : {}}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <h2 className="text-2xl font-bold text-white mb-1.5 tracking-tight">
+                                Framework de Interactividad
+                            </h2>
+                            <div className="h-0.5 w-16 bg-indigo-500 mb-3" />
+                            <p className="text-sm text-white/60 font-light leading-relaxed">
+                                Una arquitectura tecnológica diseñada para transformar la presencia humana en
+                                arte generativo vivo.
+                            </p>
+                        </motion.div>
+                    </div>
+
+                    {/* 4 Step Cards — 2x2 grid */}
+                    <div className="grid grid-cols-2 gap-3 w-full mb-4 flex-shrink-0">
+                        <BentoCard className="" delay={0.1}>
+                            <div className="flex flex-col p-4 relative z-10">
+                                <StepNumber>01</StepNumber>
+                                <div className="flex items-center justify-center py-3">
+                                    <RadarIcon isActive={isActive} small />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">Captura</h4>
+                                <p className="text-[10px] text-gray-500 leading-relaxed font-light">
+                                    Sensores de profundidad mapean presencia y movimiento en tiempo real.
+                                </p>
+                            </div>
+                        </BentoCard>
+
+                        <BentoCard className="" delay={0.2}>
+                            <div className="flex flex-col p-4 relative z-10">
+                                <StepNumber>02</StepNumber>
+                                <div className="flex items-center justify-center py-3">
+                                    <DataStreamIcon isActive={isActive} small />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">Interpretación</h4>
+                                <p className="text-[10px] text-gray-500 leading-relaxed font-light">
+                                    Datos brutos se convierten en señales que alimentan el sistema.
+                                </p>
+                            </div>
+                        </BentoCard>
+
+                        <BentoCard className="" delay={0.3}>
+                            <div className="flex flex-col p-4 relative z-10">
+                                <StepNumber>03</StepNumber>
+                                <div className="flex items-center justify-center py-3">
+                                    <NeuralMeshIcon isActive={isActive} small />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">Generación IA</h4>
+                                <p className="text-[10px] text-gray-500 leading-relaxed font-light">
+                                    Algoritmos generativos crean geometría viva basada en gestos.
+                                </p>
+                            </div>
+                        </BentoCard>
+
+                        <BentoCard className="" delay={0.4}>
+                            <div className="flex flex-col p-4 relative z-10">
+                                <StepNumber>04</StepNumber>
+                                <div className="flex items-center justify-center py-3">
+                                    <WaveformIcon isActive={isActive} small />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">Salida Visual</h4>
+                                <p className="text-[10px] text-gray-500 leading-relaxed font-light">
+                                    Renderizado 60fps+ para una experiencia visual fluida.
+                                </p>
+                            </div>
+                        </BentoCard>
+                    </div>
+
+                    {/* System Overview — full width at bottom */}
+                    <BentoCard className="w-full flex-shrink-0 min-h-[200px] relative" delay={0.5}>
+                        <div className="absolute top-3 left-4 z-10">
+                            <span className="text-[9px] font-mono text-white/30 tracking-[0.3em] uppercase">// System Overview</span>
+                        </div>
+                        <div className="w-full h-full flex items-center justify-center px-2 py-10">
+                            <SystemDiagram isActive={isActive} />
+                        </div>
+                        <div className="absolute bottom-3 left-4 right-4 z-10">
+                            <div className="w-full bg-white/8 h-px mb-2" />
+                            <div className="flex justify-between items-center text-[8px] font-mono">
+                                <span className="text-white/30">SDXL Turbo + LORA</span>
+                                <span className="text-white/30">15FPS</span>
+                                <span className="flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                                    <span className="text-emerald-400/70">Streaming</span>
+                                </span>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                    <div className="h-4 flex-shrink-0" />
+                </div>
+            </section>
+        );
+    }
+
+    // Desktop: original layout
     return (
         <section className="w-full h-full flex items-center justify-center relative bg-black">
-            {/* Scrollable Container */}
             <div
                 ref={containerRef}
                 onWheel={handleWheel}
@@ -181,11 +315,13 @@ function StepNumber({ children }: { children: React.ReactNode }) {
     );
 }
 
-// --- ICONS (SVG ANIMATIONS - Optimized for small sizes) ---
+// --- ICONS (SVG ANIMATIONS) ---
+// Added `small` prop for mobile compact sizes
 
-function RadarIcon({ isActive }: { isActive: boolean }) {
+function RadarIcon({ isActive, small }: { isActive: boolean; small?: boolean }) {
+    const size = small ? "w-16 h-16" : "w-32 h-32";
     return (
-        <svg viewBox="0 0 100 100" className="w-32 h-32 fill-none stroke-[1.2]" style={{ filter: "drop-shadow(0 0 8px rgba(129, 140, 248, 0.4))" }}>
+        <svg viewBox="0 0 100 100" className={`${size} fill-none stroke-[1.2]`} style={{ filter: "drop-shadow(0 0 8px rgba(129, 140, 248, 0.4))" }}>
             {[1, 2, 3].map((i) => (
                 <motion.circle
                     key={i}
@@ -212,9 +348,10 @@ function RadarIcon({ isActive }: { isActive: boolean }) {
     )
 }
 
-function DataStreamIcon({ isActive }: { isActive: boolean }) {
+function DataStreamIcon({ isActive, small }: { isActive: boolean; small?: boolean }) {
+    const size = small ? "w-16 h-16" : "w-32 h-32";
     return (
-        <svg viewBox="0 0 100 100" className="w-32 h-32 fill-none stroke-[1.2]" style={{ filter: "drop-shadow(0 0 6px rgba(129, 140, 248, 0.3))" }}>
+        <svg viewBox="0 0 100 100" className={`${size} fill-none stroke-[1.2]`} style={{ filter: "drop-shadow(0 0 6px rgba(129, 140, 248, 0.3))" }}>
             {[0, 1, 2, 3].map((i) => (
                 <motion.path
                     key={i}
@@ -241,9 +378,10 @@ function DataStreamIcon({ isActive }: { isActive: boolean }) {
     )
 }
 
-function NeuralMeshIcon({ isActive }: { isActive: boolean }) {
+function NeuralMeshIcon({ isActive, small }: { isActive: boolean; small?: boolean }) {
+    const size = small ? "w-16 h-16" : "w-32 h-32";
     return (
-        <svg viewBox="0 0 100 100" className="w-32 h-32 fill-none" style={{ filter: "drop-shadow(0 0 8px rgba(129, 140, 248, 0.35))" }}>
+        <svg viewBox="0 0 100 100" className={`${size} fill-none`} style={{ filter: "drop-shadow(0 0 8px rgba(129, 140, 248, 0.35))" }}>
             <motion.path
                 d="M15 50 Q 50 15 85 50"
                 stroke="rgba(255,255,255,0.6)"
@@ -265,7 +403,6 @@ function NeuralMeshIcon({ isActive }: { isActive: boolean }) {
                 animate={isActive ? { d: ["M25 25 Q 50 50 75 25", "M25 75 Q 50 50 75 75", "M25 25 Q 50 50 75 25"] } : {}}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             />
-            {/* Neural nodes */}
             {[[30, 35], [70, 35], [50, 65], [35, 55], [65, 55]].map(([cx, cy], i) => (
                 <motion.circle
                     key={i}
@@ -277,7 +414,6 @@ function NeuralMeshIcon({ isActive }: { isActive: boolean }) {
                     transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.4 }}
                 />
             ))}
-            {/* Connection lines between nodes */}
             <line x1="30" y1="35" x2="70" y2="35" className="stroke-white/15" strokeWidth="0.5" />
             <line x1="30" y1="35" x2="50" y2="65" className="stroke-white/15" strokeWidth="0.5" />
             <line x1="70" y1="35" x2="50" y2="65" className="stroke-white/15" strokeWidth="0.5" />
@@ -286,9 +422,10 @@ function NeuralMeshIcon({ isActive }: { isActive: boolean }) {
     )
 }
 
-function WaveformIcon({ isActive }: { isActive: boolean }) {
+function WaveformIcon({ isActive, small }: { isActive: boolean; small?: boolean }) {
+    const size = small ? "w-16 h-16" : "w-32 h-32";
     return (
-        <svg viewBox="0 0 100 100" className="w-32 h-32" style={{ filter: "drop-shadow(0 0 6px rgba(129, 140, 248, 0.3))" }}>
+        <svg viewBox="0 0 100 100" className={size} style={{ filter: "drop-shadow(0 0 6px rgba(129, 140, 248, 0.3))" }}>
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
                 <motion.rect
                     key={i}
@@ -313,12 +450,9 @@ function WaveformIcon({ isActive }: { isActive: boolean }) {
 
 
 function SystemDiagram({ isActive }: { isActive: boolean }) {
-    // TouchDesigner-style node chain
-    // Row 1: Input → Pre-Process → IA Ingestion
-    // Row 2: Post-Process → Upscaling → Output
-    const NW = 90, NH = 62; // node dimensions
+    const NW = 90, NH = 62;
     const row1Y = 20, row2Y = 140;
-    const cols = [100, 250, 400]; // x positions for 3 columns (centered in 500 viewBox)
+    const cols = [100, 250, 400];
 
     const nodes = [
         { x: cols[0], y: row1Y, label: "INPUT", color: "#818cf8" },
@@ -329,17 +463,11 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
         { x: cols[2], y: row2Y, label: "OUTPUT", color: "#34d399" },
     ];
 
-    // Wire paths: connector points (right edge of node → left edge of next)
     const wires = [
-        // Row 1: Input→Pre-Process
         { d: `M${cols[0] + NW / 2} ${row1Y + NH / 2} L${cols[1] - NW / 2} ${row1Y + NH / 2}` },
-        // Row 1: Pre-Process→IA Ingestion
         { d: `M${cols[1] + NW / 2} ${row1Y + NH / 2} L${cols[2] - NW / 2} ${row1Y + NH / 2}` },
-        // Vertical: IA Ingestion→Post-Process (diagonal down-left)
         { d: `M${cols[2] + NW / 2 - 20} ${row1Y + NH} C${cols[2]} ${row1Y + NH + 35}, ${cols[0] + NW} ${row2Y - 35}, ${cols[0] + NW / 2 - 20} ${row2Y}` },
-        // Row 2: Post-Process→Upscaling
         { d: `M${cols[0] + NW / 2} ${row2Y + NH / 2} L${cols[1] - NW / 2} ${row2Y + NH / 2}` },
-        // Row 2: Upscaling→Output
         { d: `M${cols[1] + NW / 2} ${row2Y + NH / 2} L${cols[2] - NW / 2} ${row2Y + NH / 2}` },
     ];
 
@@ -352,7 +480,6 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                 </filter>
             </defs>
 
-            {/* ── WIRES ── */}
             {wires.map((wire, i) => (
                 <g key={`wire-${i}`}>
                     <path d={wire.d} fill="none" className="stroke-white/8" strokeWidth="1" />
@@ -365,7 +492,6 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                         animate={isActive ? { strokeDashoffset: [0, -28] } : {}}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "linear", delay: i * 0.2 }}
                     />
-                    {/* Traveling particle */}
                     <motion.circle
                         r="2.5"
                         className="fill-indigo-400"
@@ -381,18 +507,14 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                 </g>
             ))}
 
-            {/* ── CONNECTOR DOTS (in/out ports on nodes) ── */}
             {nodes.map((node, i) => (
                 <g key={`ports-${i}`}>
-                    {/* Input port (left) - skip first node */}
                     {i !== 0 && i !== 3 && (
                         <circle cx={node.x - NW / 2} cy={node.y + NH / 2} r="3" fill={node.color} opacity={0.6} />
                     )}
-                    {/* Output port (right) - skip last node */}
                     {i !== 5 && i !== 2 && (
                         <circle cx={node.x + NW / 2} cy={node.y + NH / 2} r="3" fill={node.color} opacity={0.6} />
                     )}
-                    {/* Special ports for the diagonal wire */}
                     {i === 2 && (
                         <circle cx={node.x + NW / 2 - 20} cy={node.y + NH} r="3" fill={node.color} opacity={0.6} />
                     )}
@@ -402,10 +524,8 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                 </g>
             ))}
 
-            {/* ── NODES ── */}
             {nodes.map((node, i) => (
                 <g key={`node-${i}`} transform={`translate(${node.x - NW / 2}, ${node.y})`}>
-                    {/* Node body */}
                     <rect
                         width={NW} height={NH} rx="6"
                         fill="rgba(255,255,255,0.03)"
@@ -413,19 +533,15 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                         strokeWidth="1"
                         opacity={0.7}
                     />
-                    {/* Top header bar */}
                     <rect width={NW} height="14" rx="6" fill={node.color} opacity={0.12} />
                     <rect x="0" y="8" width={NW} height="6" fill={node.color} opacity={0.12} />
-                    {/* Label */}
                     <text x={NW / 2} y="10" textAnchor="middle" fill={node.color} fontSize="6.5" fontFamily="monospace" fontWeight="bold" opacity={0.9}>
                         {node.label}
                     </text>
                 </g>
             ))}
 
-            {/* ── NODE ANIMATIONS (inside each node) ── */}
-
-            {/* 1: INPUT - Waveform signal */}
+            {/* Node internal animations */}
             <g transform={`translate(${cols[0]}, ${row1Y + 40})`}>
                 {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
                     <motion.line
@@ -444,7 +560,6 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                 ))}
             </g>
 
-            {/* 2: PRE-PROCESS - Grid filter / matrix dots */}
             <g transform={`translate(${cols[1]}, ${row1Y + 40})`}>
                 {[-2, -1, 0, 1, 2].map((row) =>
                     [-3, -2, -1, 0, 1, 2, 3].map((col) => (
@@ -468,49 +583,19 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                 )}
             </g>
 
-            {/* 3: IA INGESTION - Neural mesh / orbiting */}
             <g transform={`translate(${cols[2]}, ${row1Y + 40})`}>
-                <motion.circle
-                    cx="0" cy="0" r="14"
-                    fill="none"
-                    stroke="#a78bfa"
-                    strokeWidth="0.6"
-                    strokeDasharray="4 3"
-                    animate={isActive ? { rotate: 360 } : {}}
-                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                    style={{ transformOrigin: "0px 0px" }}
-                />
-                <motion.circle
-                    cx="0" cy="0" r="8"
-                    fill="none"
-                    stroke="#a78bfa"
-                    strokeWidth="0.5"
-                    strokeDasharray="3 3"
-                    animate={isActive ? { rotate: -360 } : {}}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
-                    style={{ transformOrigin: "0px 0px" }}
-                />
-                <motion.circle
-                    cx="0" cy="0" r="3"
-                    fill="#a78bfa"
-                    animate={isActive ? { r: [2, 4, 2], opacity: [0.5, 1, 0.5] } : {}}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                />
+                <motion.circle cx="0" cy="0" r="14" fill="none" stroke="#a78bfa" strokeWidth="0.6" strokeDasharray="4 3"
+                    animate={isActive ? { rotate: 360 } : {}} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "0px 0px" }} />
+                <motion.circle cx="0" cy="0" r="8" fill="none" stroke="#a78bfa" strokeWidth="0.5" strokeDasharray="3 3"
+                    animate={isActive ? { rotate: -360 } : {}} transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "0px 0px" }} />
+                <motion.circle cx="0" cy="0" r="3" fill="#a78bfa"
+                    animate={isActive ? { r: [2, 4, 2], opacity: [0.5, 1, 0.5] } : {}} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} />
                 {[0, 1, 2].map((i) => (
-                    <motion.circle
-                        key={`ai-dot-${i}`}
-                        cx="0" cy="-12"
-                        r="1.5"
-                        fill="white"
-                        opacity={0.8}
-                        animate={isActive ? { rotate: [i * 120, i * 120 + 360] } : {}}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        style={{ transformOrigin: "0px 0px" }}
-                    />
+                    <motion.circle key={`ai-dot-${i}`} cx="0" cy="-12" r="1.5" fill="white" opacity={0.8}
+                        animate={isActive ? { rotate: [i * 120, i * 120 + 360] } : {}} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: "0px 0px" }} />
                 ))}
             </g>
 
-            {/* 4: POST-PROCESS - Color correction bars */}
             <g transform={`translate(${cols[0]}, ${row2Y + 40})`}>
                 {[
                     { x: -28, color: "#f87171", h: 12 },
@@ -520,83 +605,31 @@ function SystemDiagram({ isActive }: { isActive: boolean }) {
                     { x: 12, color: "#a78bfa", h: 14 },
                     { x: 22, color: "#818cf8", h: 8 },
                 ].map((bar, i) => (
-                    <motion.rect
-                        key={`bar-${i}`}
-                        x={bar.x} y={-bar.h / 2}
-                        width="7" height={bar.h}
-                        rx="1.5"
-                        fill={bar.color}
-                        opacity={0.7}
-                        animate={isActive ? {
-                            height: [bar.h, bar.h * 0.4, bar.h * 1.3, bar.h],
-                            y: [-bar.h / 2, -bar.h * 0.2, -bar.h * 0.65, -bar.h / 2],
-                            opacity: [0.5, 0.9, 0.7, 0.5],
-                        } : {}}
-                        transition={{ duration: 2 + i * 0.15, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
-                    />
+                    <motion.rect key={`bar-${i}`} x={bar.x} y={-bar.h / 2} width="7" height={bar.h} rx="1.5" fill={bar.color} opacity={0.7}
+                        animate={isActive ? { height: [bar.h, bar.h * 0.4, bar.h * 1.3, bar.h], y: [-bar.h / 2, -bar.h * 0.2, -bar.h * 0.65, -bar.h / 2], opacity: [0.5, 0.9, 0.7, 0.5] } : {}}
+                        transition={{ duration: 2 + i * 0.15, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }} />
                 ))}
             </g>
 
-            {/* 5: UPSCALING - Expanding squares */}
             <g transform={`translate(${cols[1]}, ${row2Y + 40})`}>
                 {[1, 2, 3].map((i) => (
-                    <motion.rect
-                        key={`scale-${i}`}
-                        x={-5 * i} y={-5 * i}
-                        width={10 * i} height={10 * i}
-                        rx="2"
-                        fill="none"
-                        stroke="#34d399"
-                        strokeWidth="0.8"
-                        animate={isActive ? {
-                            opacity: [0.2, 0.8, 0.2],
-                            scale: [0.9, 1.15, 0.9],
-                        } : {}}
-                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }}
-                        style={{ transformOrigin: "0px 0px" }}
-                    />
+                    <motion.rect key={`scale-${i}`} x={-5 * i} y={-5 * i} width={10 * i} height={10 * i} rx="2" fill="none" stroke="#34d399" strokeWidth="0.8"
+                        animate={isActive ? { opacity: [0.2, 0.8, 0.2], scale: [0.9, 1.15, 0.9] } : {}}
+                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }} style={{ transformOrigin: "0px 0px" }} />
                 ))}
-                <motion.text
-                    x="0" y="2"
-                    textAnchor="middle"
-                    fill="#34d399"
-                    fontSize="7"
-                    fontFamily="monospace"
-                    fontWeight="bold"
-                    animate={isActive ? { opacity: [0.4, 1, 0.4] } : {}}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                    8K
-                </motion.text>
+                <motion.text x="0" y="2" textAnchor="middle" fill="#34d399" fontSize="7" fontFamily="monospace" fontWeight="bold"
+                    animate={isActive ? { opacity: [0.4, 1, 0.4] } : {}} transition={{ duration: 1.5, repeat: Infinity }}>8K</motion.text>
             </g>
 
-            {/* 6: OUTPUT - Live render display */}
             <g transform={`translate(${cols[2]}, ${row2Y + 24})`}>
                 <rect x="-30" y="-8" width="60" height="34" rx="2" fill="none" stroke="#34d399" strokeWidth="0.6" opacity={0.3} />
                 {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-                    <motion.rect
-                        key={`out-${i}`}
-                        x={-26 + i * 7.5}
-                        y="0"
-                        width="5"
-                        rx="1"
-                        height="4"
-                        fill="#34d399"
-                        animate={isActive ? {
-                            height: [4, 14 + Math.sin(i * 0.9) * 8, 4],
-                            y: [10, 4 - Math.sin(i * 0.9) * 4, 10],
-                            opacity: [0.3, 0.9, 0.3],
-                        } : {}}
-                        transition={{ duration: 1.2 + i * 0.06, repeat: Infinity, delay: i * 0.08, ease: "easeInOut" }}
-                    />
+                    <motion.rect key={`out-${i}`} x={-26 + i * 7.5} y="0" width="5" rx="1" height="4" fill="#34d399"
+                        animate={isActive ? { height: [4, 14 + Math.sin(i * 0.9) * 8, 4], y: [10, 4 - Math.sin(i * 0.9) * 4, 10], opacity: [0.3, 0.9, 0.3] } : {}}
+                        transition={{ duration: 1.2 + i * 0.06, repeat: Infinity, delay: i * 0.08, ease: "easeInOut" }} />
                 ))}
-                {/* LIVE badge */}
-                <motion.circle
-                    cx="25" cy="-4" r="2"
-                    fill="#34d399"
-                    animate={isActive ? { opacity: [1, 0.2, 1] } : {}}
-                    transition={{ duration: 0.7, repeat: Infinity }}
-                />
+                <motion.circle cx="25" cy="-4" r="2" fill="#34d399"
+                    animate={isActive ? { opacity: [1, 0.2, 1] } : {}} transition={{ duration: 0.7, repeat: Infinity }} />
                 <text x="19" y="-2" fill="#34d399" fontSize="4.5" fontFamily="monospace" opacity={0.8}>LIVE</text>
             </g>
 

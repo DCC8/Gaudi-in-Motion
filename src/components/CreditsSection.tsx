@@ -352,21 +352,21 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
             />
 
             {/* Header text */}
-            <p className="text-sm md:text-base font-mono text-white/40 tracking-[0.3em] uppercase mb-12 z-10">
+            <p className="text-xs md:text-base font-mono text-white/40 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-8 md:mb-12 z-10 text-center px-4">
                 Proyecto conceptualizado y producido por
             </p>
 
             {/* Logo — generous container (2.8:1 aspect) for displacement headroom */}
             <div
                 ref={logoContainerRef}
-                className="relative w-[90vw] md:w-[700px] md:max-w-[90vw]"
+                className="relative w-[80vw] md:w-[700px] md:max-w-[90vw]"
                 style={{ aspectRatio: "2.8 / 1" }}
             >
                 {logoTex && (
                     <Canvas
                         camera={{ position: [0, 0, 5], fov: 50 }}
-                        dpr={[1, 2]}
-                        gl={{ antialias: true, alpha: true }}
+                        dpr={isMobile ? 1 : [1, 2]}
+                        gl={{ antialias: !isMobile, alpha: true }}
                         frameloop="demand"
                         className={isMobile ? '' : 'cursor-none'}
                         style={{ background: "transparent" }}

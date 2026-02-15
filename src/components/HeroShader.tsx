@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree, createPortal } from "@react-three/fiber";
 import { useTexture, Text, Float, useFBO } from "@react-three/drei";
 import * as THREE from "three";
@@ -300,13 +300,18 @@ export default function HeroShader({
     config: ShaderConfig;
     isActive?: boolean;
 }) {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
+    }, []);
+
     return (
         <div className="w-full h-full relative">
             <Canvas
                 camera={{ position: [0, 0, 5], fov: 50 }}
                 className="w-full h-full"
-                dpr={[1, 2]}
-                gl={{ antialias: true, alpha: false }}
+                dpr={isMobile ? 1 : [1, 2]}
+                gl={{ antialias: !isMobile, alpha: false }}
                 frameloop="demand"
             >
                 <React.Suspense fallback={null}>

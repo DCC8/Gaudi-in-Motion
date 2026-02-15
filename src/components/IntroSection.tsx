@@ -257,7 +257,7 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
             <div className="relative w-full h-full flex flex-col md:flex-row items-center z-10">
 
                 {/* LEFT: Text Column */}
-                <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center relative px-6 md:px-16 lg:px-24">
+                <div className="w-full md:w-1/2 h-[55%] md:h-full flex items-center justify-center relative px-6 md:px-16 lg:px-24">
 
                     {/* Progress Dots — desktop only */}
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3 z-30">
@@ -299,10 +299,10 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                 </div>
 
                 {/* RIGHT: Media */}
-                <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center relative px-4 md:px-12">
+                <div className="w-full md:w-1/2 h-[45%] md:h-full flex items-start md:items-center justify-center relative px-8 md:px-12 pt-2 md:pt-0">
                     <div
                         ref={mediaContainerRef}
-                        className="relative w-full max-w-md aspect-[3/4] rounded-[32px] overflow-hidden border border-white/[0.06] shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+                        className="relative w-[70%] md:w-full max-w-md aspect-[3/4] rounded-[20px] md:rounded-[32px] overflow-hidden border border-white/[0.06] shadow-[0_0_60px_rgba(0,0,0,0.5)]"
                     >
                         {/* Stacked media layers */}
                         {SLIDE_MEDIA.map((media, i) => (

@@ -94,21 +94,21 @@ export default function ThreeWorksSection({ isActive, onNext, onReverse }: Three
         <section
             ref={combinedRef}
             onWheel={handleWheel}
-            className={`w-full h-full bg-black text-white flex flex-col items-center justify-center p-4 md:p-8 lg:p-16 relative overflow-hidden ${isMobile ? 'overflow-y-auto' : ''}`}
+            className={`w-full h-full bg-black text-white flex flex-col items-center p-4 md:p-8 lg:p-16 relative ${isMobile ? 'justify-start overflow-y-auto pt-6' : 'justify-center overflow-hidden'}`}
         >
             {/* Intro Text */}
-            <div className="max-w-4xl text-center mb-6 md:mb-12 relative z-10">
-                <p className="text-base md:text-xl lg:text-2xl font-light leading-relaxed text-gray-200">
-                    La obra se articula como una colección de 3 piezas generativas que exploran tres dimensiones fundamentales del universo gaudiniano. (expandible a otros conceptos)
+            <div className={`max-w-4xl text-center relative z-10 flex-shrink-0 ${isMobile ? 'mb-4' : 'mb-12'}`}>
+                <p className="text-sm md:text-xl lg:text-2xl font-light leading-relaxed text-gray-200">
+                    La obra se articula como una colección de 3 piezas generativas que exploran tres dimensiones fundamentales del universo gaudiniano.
                 </p>
             </div>
 
             {/* Cards Grid */}
-            <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl relative z-10 ${isMobile ? 'h-auto' : 'h-[65vh]'}`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-7xl relative z-10 flex-shrink-0 ${isMobile ? 'h-auto pb-4' : 'h-[65vh]'}`}>
                 {CARDS.map((card) => (
                     <div
                         key={card.id}
-                        className={`relative flex flex-col bg-[#080808] border border-white/10 rounded-2xl overflow-hidden group hover:border-white/30 transition-colors duration-300 ${isMobile ? 'min-h-[250px]' : 'h-full'}`}
+                        className={`relative flex flex-col bg-[#080808] border border-white/10 rounded-2xl overflow-hidden group hover:border-white/30 transition-colors duration-300 ${isMobile ? 'min-h-[200px]' : 'h-full'}`}
                         onMouseEnter={() => setHoveredCard(card.id)}
                         onMouseLeave={() => setHoveredCard(null)}
                     >
@@ -129,7 +129,7 @@ export default function ThreeWorksSection({ isActive, onNext, onReverse }: Three
                         </div>
 
                         {/* Image Container */}
-                        <div className={`w-full relative p-4 pb-0 ${isMobile ? 'h-[150px]' : 'flex-grow'}`}>
+                        <div className={`w-full relative p-3 md:p-4 pb-0 ${isMobile ? 'h-[120px]' : 'flex-grow'}`}>
                             <div className="w-full h-full relative rounded-t-lg overflow-hidden border-t border-l border-r border-white/5 bg-black">
                                 <GooeyImage imageSrc={card.image} isActive={isActive} />
 
