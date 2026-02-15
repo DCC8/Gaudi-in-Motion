@@ -389,11 +389,11 @@ export default function Home() {
       {currentIndex > 0 && (
         <button
           onClick={() => !isAnimating && navigateTo(0, -1)}
-          className="no-swipe fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 group flex items-center gap-3 cursor-pointer"
+          className="no-swipe fixed top-4 right-4 md:bottom-8 md:left-8 md:top-auto md:right-auto z-50 group flex items-center gap-2 md:gap-3 cursor-pointer"
           aria-label="Volver al inicio"
         >
-          <span className="w-px h-8 bg-white/20 group-hover:bg-white/50 group-hover:h-10 transition-all duration-300" />
-          <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/25 group-hover:text-white/60 transition-colors duration-300">
+          <span className="hidden md:block w-px h-8 bg-white/20 group-hover:bg-white/50 group-hover:h-10 transition-all duration-300" />
+          <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/40 md:text-white/25 group-hover:text-white/60 transition-colors duration-300 bg-black/50 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none px-3 py-1.5 md:px-0 md:py-0 rounded-full md:rounded-none border border-white/10 md:border-0">
             Inicio
           </span>
         </button>

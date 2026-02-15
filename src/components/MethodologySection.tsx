@@ -39,10 +39,12 @@ export default function MethodologySection({ isActive, onComplete, onReverse }: 
 
     // Touch boundary detection for mobile
     const touchStartY = React.useRef(0);
+    const touchCooldown = React.useRef(false);
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartY.current = e.touches[0].clientY;
     };
     const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchCooldown.current) return;
         const container = containerRef.current;
         if (!container) return;
         const deltaY = touchStartY.current - e.changedTouches[0].clientY;
@@ -50,24 +52,39 @@ export default function MethodologySection({ isActive, onComplete, onReverse }: 
 
         const { scrollTop, scrollHeight, clientHeight } = container;
         const isAtTop = scrollTop <= 5;
-        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 5;
+        const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 10;
+        const isOverflowing = scrollHeight > clientHeight + 5;
+
+        // If content doesn't overflow, simple swipe navigation
+        if (!isOverflowing) {
+            touchCooldown.current = true;
+            setTimeout(() => { touchCooldown.current = false; }, 500);
+            if (deltaY > 0) onComplete?.();
+            else onReverse?.();
+            return;
+        }
 
         if (isAtTop && deltaY < 0) {
+            touchCooldown.current = true;
+            setTimeout(() => { touchCooldown.current = false; }, 500);
             onReverse?.();
         } else if (isAtBottom && deltaY > 0) {
+            touchCooldown.current = true;
+            setTimeout(() => { touchCooldown.current = false; }, 500);
             onComplete?.();
         }
     };
 
     if (isMobile) {
         return (
-            <section className="w-full h-full flex items-center justify-center relative bg-black">
+            <section className="w-full h-full flex items-center justify-center relative bg-black no-swipe">
                 <div
                     ref={containerRef}
                     onWheel={handleWheel}
                     onTouchStart={handleTouchStart}
                     onTouchEnd={handleTouchEnd}
-                    className="w-full h-full overflow-y-auto overflow-x-hidden no-swipe p-4 flex flex-col items-center scroll-smooth"
+                    className="w-full h-full overflow-y-auto overflow-x-hidden p-4 flex flex-col items-center scroll-smooth"
+                    style={{ touchAction: "pan-y" }}
                 >
                     {/* Header */}
                     <div className="w-full mb-4 flex-shrink-0">
