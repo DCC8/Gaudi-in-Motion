@@ -299,10 +299,10 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                 </div>
 
                 {/* RIGHT: Media */}
-                <div className="w-full md:w-1/2 h-[45%] md:h-full flex items-start md:items-center justify-center relative px-8 md:px-12 pt-2 md:pt-0">
+                <div className="w-full md:w-1/2 h-[45%] md:h-full flex items-center md:items-center justify-center relative px-8 md:px-12 pb-10 md:pb-0">
                     <div
                         ref={mediaContainerRef}
-                        className="relative w-[70%] md:w-full max-w-md aspect-[3/4] rounded-[20px] md:rounded-[32px] overflow-hidden border border-white/[0.06] shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+                        className="relative w-[65%] md:w-full max-w-md aspect-[3/4] rounded-[20px] md:rounded-[32px] overflow-hidden border border-white/[0.06] shadow-[0_0_60px_rgba(0,0,0,0.5)]"
                     >
                         {/* Stacked media layers */}
                         {SLIDE_MEDIA.map((media, i) => (
@@ -321,6 +321,8 @@ export default function IntroSection({ isActive = false, onComplete, onReverse }
                                         loop
                                         muted
                                         playsInline
+                                        autoPlay={i === 0}
+                                        preload="auto"
                                         src={media.src}
                                     />
                                 ) : (

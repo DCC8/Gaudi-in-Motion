@@ -3,7 +3,7 @@
 import React, { useRef, useLayoutEffect, useState, useEffect, useCallback } from "react";
 import gsap from "gsap";
 import { Draggable } from "gsap/all";
-import { useTouchNav, useIsMobile } from "@/hooks/useMobile";
+import { useIsMobile } from "@/hooks/useMobile";
 
 // Register Draggable
 if (typeof window !== "undefined") {
@@ -38,7 +38,7 @@ const SLIDES = [
 ];
 
 export default function DraggableSliderSection({ isActive, onReverse, onNext }: DraggableSliderSectionProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLElement>(null);
     const sliderContainerRef = useRef<HTMLDivElement>(null);
     const sliderRef = useRef<HTMLDivElement>(null);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -50,15 +50,28 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
     // Flag to prevent useEffect[activeIndex] from firing a duplicate animation after drag snap
     const dragJustSnapped = useRef(false);
 
+    // Refs for mobile touch handling
+    const touchStartX = useRef(0);
+    const touchStartY = useRef(0);
+    const touchCooldown = useRef(false);
+    const activeIndexRef = useRef(0);
+    activeIndexRef.current = activeIndex;
+
+    // Keep callback refs fresh
+    const onNextRef = useRef(onNext);
+    const onReverseRef = useRef(onReverse);
+    onNextRef.current = onNext;
+    onReverseRef.current = onReverse;
+
     // Helper to get slide width
     const getSlideWidth = useCallback(() => {
         if (!sliderRef.current?.children[0]) return 0;
         return (sliderRef.current.children[0] as HTMLElement).clientWidth + 40; // width + gap
     }, []);
 
-    // Initialize Draggable - Once on mount
+    // Initialize Draggable - Desktop only
     useLayoutEffect(() => {
-        if (!sliderRef.current || !sliderContainerRef.current) return;
+        if (!sliderRef.current || !sliderContainerRef.current || isMobile) return;
 
         const slider = sliderRef.current;
         const ctx = gsap.context(() => {
@@ -105,11 +118,11 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
             window.removeEventListener("resize", handleResize);
             ctx.revert();
         };
-    }, [getSlideWidth]);
+    }, [getSlideWidth, isMobile]);
 
-    // Handle Active State for Enabling/Disabling Interaction
+    // Handle Active State for Enabling/Disabling Interaction (desktop only)
     useEffect(() => {
-        if (!sliderRef.current) return;
+        if (!sliderRef.current || isMobile) return;
         const draggableInstance = Draggable.get(sliderRef.current);
         if (draggableInstance) {
             if (isActive) {
@@ -118,7 +131,7 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
                 draggableInstance.disable();
             }
         }
-    }, [isActive]);
+    }, [isActive, isMobile]);
 
     // Handle Active Index Change -> Animate Slider (only when not triggered by drag snap)
     useEffect(() => {
@@ -175,16 +188,72 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
         }
     };
 
-    // Touch nav — uses the activeIndex via handleNextSlide/handlePrevSlide
-    const touchRef = useTouchNav(handleNextSlide, handlePrevSlide);
-    const sectionRefCallback = useCallback((el: HTMLDivElement | null) => {
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-        (touchRef as React.MutableRefObject<HTMLElement | null>).current = el;
-    }, [touchRef]);
+    // ─── Mobile: bidirectional touch handler ────────────────────────────────
+    // Horizontal swipe → change slides (smooth)
+    // Vertical swipe → navigate sections (onNext/onReverse)
+    useEffect(() => {
+        if (!isMobile) return;
+        const el = containerRef.current;
+        if (!el) return;
+
+        const handleTouchStart = (e: TouchEvent) => {
+            touchStartX.current = e.touches[0].clientX;
+            touchStartY.current = e.touches[0].clientY;
+        };
+
+        const handleTouchEnd = (e: TouchEvent) => {
+            if (touchCooldown.current) return;
+
+            const deltaX = touchStartX.current - e.changedTouches[0].clientX;
+            const deltaY = touchStartY.current - e.changedTouches[0].clientY;
+            const absDx = Math.abs(deltaX);
+            const absDy = Math.abs(deltaY);
+
+            // Minimum gesture threshold
+            if (absDx < 30 && absDy < 30) return;
+
+            touchCooldown.current = true;
+            setTimeout(() => { touchCooldown.current = false; }, 500);
+
+            if (absDx > absDy) {
+                // ── Horizontal swipe → change slides ──
+                if (deltaX > 0) {
+                    // Swipe left → next slide
+                    if (activeIndexRef.current < SLIDES.length - 1) {
+                        setActiveIndex(prev => prev + 1);
+                    }
+                } else {
+                    // Swipe right → prev slide
+                    if (activeIndexRef.current > 0) {
+                        setActiveIndex(prev => prev - 1);
+                    }
+                }
+            } else {
+                // ── Vertical swipe → navigate sections ──
+                if (deltaY > 0) {
+                    // Swipe up → next section
+                    onNextRef.current?.();
+                } else {
+                    // Swipe down → prev section
+                    onReverseRef.current?.();
+                }
+            }
+        };
+
+        el.addEventListener("touchstart", handleTouchStart, { passive: true });
+        el.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+        return () => {
+            el.removeEventListener("touchstart", handleTouchStart);
+            el.removeEventListener("touchend", handleTouchEnd);
+        };
+    }, [isMobile]);
 
     return (
         <section
-            ref={sectionRefCallback}
+            ref={(el) => {
+                (containerRef as React.MutableRefObject<HTMLElement | null>).current = el;
+            }}
             onWheel={handleWheel}
             className="w-full h-full relative bg-black overflow-hidden flex no-swipe"
         >
@@ -230,8 +299,20 @@ export default function DraggableSliderSection({ isActive, onReverse, onNext }: 
                 </div>
             </div>
 
+            {/* Mobile: horizontal dot indicator */}
+            {isMobile && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex gap-2">
+                    {SLIDES.map((_, idx) => (
+                        <div
+                            key={idx}
+                            className={`h-1 rounded-full transition-all duration-300 ${idx === activeIndex ? 'w-6 bg-white' : 'w-2 bg-white/30'}`}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* RIGHT: Linear Slider */}
-            <div ref={sliderContainerRef} className={`w-full h-full absolute top-0 left-0 ${isMobile ? 'pl-0' : 'pl-[25%]'} flex items-center overflow-hidden cursor-grab active:cursor-grabbing`}>
+            <div ref={sliderContainerRef} className={`w-full h-full absolute top-0 left-0 ${isMobile ? 'pl-0' : 'pl-[25%]'} flex items-center overflow-hidden ${isMobile ? '' : 'cursor-grab active:cursor-grabbing'}`}>
                 {/* Slider Track */}
                 <div ref={sliderRef} className="flex items-center gap-10 pl-10 h-[60vh]">
                     {SLIDES.map((slide, i) => (

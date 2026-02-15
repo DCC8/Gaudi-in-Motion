@@ -3,6 +3,9 @@
 :root {
   --background: #000000;
   --foreground: #ffffff;
+  /* iOS-safe viewport height — dvh accounts for Safari dynamic toolbar */
+  --app-height: 100vh;
+  --app-height: 100dvh;
 }
 
 @theme inline {
@@ -20,6 +23,42 @@ body {
   font-family: var(--font-jetbrains-mono), monospace;
   overflow-x: hidden;
   /* Prevent horizontal scroll */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent iOS text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  /* Prevent iOS long-press context menu on elements */
+  -webkit-touch-callout: none;
+  /* Prevent rubber-band overscroll on iOS */
+  overscroll-behavior: none;
+}
+
+/* Sections that manage their own touch/swipe gestures */
+.no-swipe {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* iOS-safe full height utility */
+.h-dvh-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Fix iOS video inline playback */
+video {
+  -webkit-transform: translateZ(0);
+  /* Prevent iOS from showing native video controls */
+  -webkit-appearance: none;
+}
+
+/* Safe area insets for notched iPhones */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Elegant Dotted Background — applied to every section */

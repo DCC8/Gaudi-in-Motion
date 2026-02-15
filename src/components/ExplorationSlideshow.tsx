@@ -193,6 +193,7 @@ export default function ExplorationSlideshow({ isActive, onNext, onReverse }: Ex
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     src={activeSlide.videoBg}
                 />
                 <div className="absolute inset-0 bg-black/40"></div>

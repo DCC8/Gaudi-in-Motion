@@ -365,8 +365,8 @@ export default function CreditsSection({ isActive, onReverse }: CreditsSectionPr
                 {logoTex && (
                     <Canvas
                         camera={{ position: [0, 0, 5], fov: 50 }}
-                        dpr={isMobile ? 1 : [1, 2]}
-                        gl={{ antialias: !isMobile, alpha: true }}
+                        dpr={[1, 2]}
+                        gl={{ antialias: true, alpha: true }}
                         frameloop="demand"
                         className={isMobile ? '' : 'cursor-none'}
                         style={{ background: "transparent" }}

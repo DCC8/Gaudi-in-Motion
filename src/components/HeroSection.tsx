@@ -41,7 +41,7 @@ export default function HeroSection({ isActive }: HeroSectionProps) {
     }, []);
 
     return (
-        <section ref={containerRef} className="w-full h-screen relative bg-black overflow-hidden">
+        <section ref={containerRef} className="w-full h-full relative bg-black overflow-hidden">
 
             {/* Full Screen Shader Canvas (includes Text) */}
             <div className="absolute inset-0 z-10 w-full h-full">

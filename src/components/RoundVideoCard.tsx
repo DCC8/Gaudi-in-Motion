@@ -50,6 +50,7 @@ export default function RoundVideoCard({
                             loop
                             muted
                             playsInline
+                            preload="auto"
                             className="w-full h-full object-cover"
                         />
                     </div>

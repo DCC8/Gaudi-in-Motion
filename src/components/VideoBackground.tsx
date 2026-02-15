@@ -7,6 +7,7 @@ export default function VideoBackground() {
                 muted
                 loop
                 playsInline
+                preload="auto"
                 poster="/assets/hero_video_poster.jpg" // Optional placeholder if needed
             >
                 <source src="/assets/hero_video.mp4" type="video/mp4" />

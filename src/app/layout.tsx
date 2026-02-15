@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google"; // Import only JetBrains Mono
 import "./globals.css";
 
@@ -9,9 +9,21 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["300", "500", "800"], // Low, Medium, ExtraBold as requested
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "GAUDÍ IN MOTION",
   description: "Immersive WebGL Experience",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({

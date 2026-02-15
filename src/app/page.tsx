@@ -196,7 +196,7 @@ export default function Home() {
   // Manual gives more control over content types (props, structure).
 
   return (
-    <main className="fixed w-full h-screen bg-black overflow-hidden selection:bg-white selection:text-black">
+    <main className="fixed w-full h-dvh-safe bg-black overflow-hidden selection:bg-white selection:text-black">
       {/* Global Video Background if it persists across all sections? 
             The swipe effect covers everything. 
             If text slide needs a black bg, it will cover the video.
